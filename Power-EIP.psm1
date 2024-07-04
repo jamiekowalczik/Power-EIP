@@ -98,8 +98,13 @@ Function Send-EfficientIPRequest {
          Write-Host "Method: $($Method)"
       }
 
+      $SplatVars += @{Method = $Method}
+      $SplatVars += @{Headers = $global:efficientIPConnection.Headers}
+      $SplatVars += @{Uri = $URL}
+      If($SkipCertificateCheck){ $SplatVars += @{SkipCertificateCheck = $true} }
+
       Try {
-         $requests = Invoke-WebRequest -Uri $URL -Method $Method -Headers $global:efficientIPConnection.Headers
+         $requests = Invoke-WebRequest @SplatVars
          Return $requests
       } catch {
          if($_.Exception.Response.StatusCode -eq "Unauthorized") {
