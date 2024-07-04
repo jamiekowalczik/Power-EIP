@@ -4,7 +4,7 @@ Powershell module for EfficientIP SOLDIDServer
 ### Import Module and Connect to EfficientIP SOLIDServer
 ```
 PS > Import-Module Power-EIP
-PS > Connect-EIP -Hostname eip.local -Username ausername -DNSName smart.local -View external -Password apassword
+PS > Connect-EIP -Hostname eip.local -Username ausername -DNSName smart.local -View external
 ```
 ### Create
 ```
