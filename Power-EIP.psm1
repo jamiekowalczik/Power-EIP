@@ -101,7 +101,7 @@ Function Send-EfficientIPRequest {
       $SplatVars += @{Method = $Method}
       $SplatVars += @{Headers = $global:efficientIPConnection.Headers}
       $SplatVars += @{Uri = $URL}
-      If($SkipCertificateCheck){ $SplatVars += @{SkipCertificateCheck = $true} }
+      If($global:efficientIPConnection.EIPApiTroubleshoot){ $SplatVars += @{SkipCertificateCheck = $true} }
 
       Try {
          $requests = Invoke-WebRequest @SplatVars
