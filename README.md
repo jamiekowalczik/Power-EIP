@@ -5,6 +5,8 @@ Powershell module for EfficientIP SOLDIDServer
 ```
 PS > Import-Module Power-EIP
 PS > Connect-EIP -Hostname eip.local -Username ausername -DNSName smart.local -View external
+Password: ************************************
+PS >
 ```
 ### Create
 ```
