@@ -1,5 +1,5 @@
 ## Power-EIP
-Powershell module for EfficientIP SOLDIDServer
+Powershell module for EfficientIP SOLIDServer
 ## Powershell module to provide CRUD functionality for EfficientIP SOLIDServer DNS
 ### Import Module and Connect to EfficientIP SOLIDServer
 ```
