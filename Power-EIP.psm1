@@ -83,7 +83,7 @@ Function Send-EfficientIPRequest {
    Param(
       [Parameter(Mandatory=$true, HelpMessage="Endpoint")][String]$Endpoint,
       [Parameter(Mandatory=$false, HelpMessage="Method")][String]$Method = "Get",
-      [Parameter(Mandatory=$true, HelpMessage="Body")][String]$Parameters
+      [Parameter(Mandatory=$true, HelpMessage="Parameters")][String]$Parameters
    )
 
    begin {}
