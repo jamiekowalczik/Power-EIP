@@ -10,7 +10,7 @@ PS >
 ```
 ### Create
 ```
-PS > New-EIPDNSRecord -DNSRRRecordName "validate-testserver2-domain-net.exampledomain.net" -DNSRRRecordValue "a new value" -DNSRRRecordType TXT
+PS > New-EIPDNSRecord -Name "validate-testserver2-domain-net.exampledomain.net" -Value "a new value" -Type TXT
 
 ret_oid
 -------
@@ -20,7 +20,7 @@ PS >
 ```
 ### Read
 ```
-PS > Get-EIPDNSRecordInfo -DNSRRRecordName "validate-testserver2-domain-net.exampledomain.net"
+PS > Get-EIPDNSRecordInfo -Name "validate-testserver2-domain-net.exampledomain.net"
 
 errno                                       : 0
 rr_all_value                                : a new value
@@ -87,7 +87,7 @@ PS >
 ```
 ### Update
 ```
-PS > Update-EIPDNSRecord -DNSRRRecordName "validate-testserver2-domain-net.exampledomain.net" -DNSRRRecordValue "updated-example-value"
+PS > Update-EIPDNSRecord -Name "validate-testserver2-domain-net.exampledomain.net" -Value "updated-example-value"
 
 ret_oid
 -------
@@ -97,7 +97,7 @@ PS >
 ```
 ### Delete
 ```
-PS > Remove-EIPDNSRecord -DNSRRRecordName "validate-testserver2-domain-net.exampledomain.net"
+PS > Remove-EIPDNSRecord -Name "validate-testserver2-domain-net.exampledomain.net"
 
 ret_oid
 -------
