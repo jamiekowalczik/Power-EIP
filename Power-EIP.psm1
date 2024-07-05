@@ -121,10 +121,10 @@ Function Send-EfficientIPRequest {
 
 Function Get-EIPDNSRecordID {
    Param(
-      [Parameter(Mandatory=$true, HelpMessage="DNS RR Record Name")][String]$DNSRRRecordName
+      [Parameter(Mandatory=$true, HelpMessage="DNS RR Record Name")][String]$Name
    )
    $Endpoint = "dns_rr_list"
-   $Parameters = "WHERE=(rr_full_name='$($DNSRRRecordName)'+OR+value1='$($DNSRRRecordName)')+AND+(dns_name='$($global:efficientIPConnection.EIPApiDNSName)'+AND+dnsview_name='$($global:efficientIPConnection.EIPApiDNSView)')"
+   $Parameters = "WHERE=(rr_full_name='$($Name)'+OR+value1='$($Name)')+AND+(dns_name='$($global:efficientIPConnection.EIPApiDNSName)'+AND+dnsview_name='$($global:efficientIPConnection.EIPApiDNSView)')"
    
    $Response = Send-EfficientIPRequest -Parameters $Parameters -Endpoint $Endpoint
    Return ($Response.Content | ConvertFrom-JSON).rr_id
@@ -132,31 +132,38 @@ Function Get-EIPDNSRecordID {
 
 Function Get-EIPDNSRecordInfo {
    Param(
-      [Parameter(Mandatory=$false, HelpMessage="DNS RR Record ID")][String]$DNSRRRecordID,
-      [Parameter(Mandatory=$false, HelpMessage="DNS RR Record Name")][String]$DNSRRRecordName
+      [Parameter(Mandatory=$false, HelpMessage="DNS RR Record ID")][String]$ID,
+      [Parameter(Mandatory=$false, HelpMessage="DNS RR Record Name")][String]$Name
    )
 
-   If($DNSRRRecordID -eq '') {
-      $DNSRRRecordIDs = Get-EIPDNSRecordID -DNSRRRecordName $DNSRRRecordName
+   If($ID -eq '') {
+      $IDs = Get-EIPDNSRecordID -Name $Name
    }Else{
-      $DNSRRRecordIDs = $DNSRRRecordID
+      $IDs = $ID
    }
    
    $Endpoint = "dns_rr_info"
 
-   $Response += $DNSRRRecordIDs | % { Send-EfficientIPRequest -Parameters "rr_id=$($_)" -Endpoint $Endpoint }
+   $Response += $IDs | % { Send-EfficientIPRequest -Parameters "rr_id=$($_)" -Endpoint $Endpoint }
    Return $Response.Content | ConvertFrom-JSON
 }
 
 Function New-EIPDNSRecord {
    Param(
-      [Parameter(Mandatory=$false, HelpMessage="DNS RR Record Name")][String]$DNSRRRecordName,
-      [Parameter(Mandatory=$false, HelpMessage="DNS RR Record Value")][String]$DNSRRRecordValue,
-      [Parameter(Mandatory=$false, HelpMessage="DNS RR Record Type")][String]$DNSRRRecordType
+      [Parameter(Mandatory=$true, HelpMessage="DNS RR Record Name")][String]$Name,
+      [Parameter(Mandatory=$true, HelpMessage="DNS RR Record Value")][String]$Value,
+      [Parameter(Mandatory=$true, HelpMessage="DNS RR Record Type")][String]$Type,
+      [Parameter(Mandatory=$false, HelpMessage="DNS RR Record TTL")][String]$Ttl
    )
 
    $Endpoint = "dns_rr_add"
-   $Parameters = "dnsview_name=$($global:efficientIPConnection.EIPApiDNSView)&rr_name=$DNSRRRecordName&rr_type=$DNSRRRecordType&value1=$($DNSRRRecordValue)&add_flag=new_only&check_value=yes&dns_name=$($global:efficientIPConnection.EIPApiDNSName)"
+   $SplatVars += @{rr_name = $Name}
+   $SplatVars += @{value1 = $Value}
+   $SplatVars += @{rr_type = $Type}
+   If($Ttl -ne ""){ $SplatVars += @{ttl = $Ttl} }
+   $queryString = ($SplatVars.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join '&'
+   
+   $Parameters = "dnsview_name=$($global:efficientIPConnection.EIPApiDNSView)&add_flag=new_only&check_value=yes&dns_name=$($global:efficientIPConnection.EIPApiDNSName)&$($queryString)"
 
    $Response = Send-EfficientIPRequest -Parameters $Parameters -Endpoint $Endpoint -Method POST
    Return $Response.Content | ConvertFrom-JSON
@@ -164,13 +171,14 @@ Function New-EIPDNSRecord {
 
 Function Update-EIPDNSRecord {
    Param(
-      [Parameter(Mandatory=$false, HelpMessage="DNS RR Record ID")][String]$DNSRRRecordID,
-      [Parameter(Mandatory=$false, HelpMessage="DNS RR Record Name")][String]$DNSRRRecordName,
-      [Parameter(Mandatory=$false, HelpMessage="DNS RR Record Value")][String]$DNSRRRecordValue
+      [Parameter(Mandatory=$false, HelpMessage="DNS RR Record ID")][String]$ID,
+      [Parameter(Mandatory=$false, HelpMessage="DNS RR Record Name")][String]$Name,
+      [Parameter(Mandatory=$false, HelpMessage="DNS RR Record Value")][String]$Value,
+      [Parameter(Mandatory=$false, HelpMessage="DNS RR Record TTL")][String]$Ttl
    )
 
-   If($DNSRRRecordID -eq '') {
-      $DNSRRRecord = Get-EIPDNSRecordID -DNSRRRecordName $DNSRRRecordName
+   If($ID -eq '') {
+      $DNSRRRecord = Get-EIPDNSRecordID -Name $Name
       If($DNSRRRecord.count -eq 0){
          Write-Host "No records exist, exiting..."
          Break
@@ -178,11 +186,16 @@ Function Update-EIPDNSRecord {
          Write-Host "More than one record returned, exiting..."
          Break
       }
-      $DNSRRRecordID = $DNSRRRecord
+      $ID = $DNSRRRecord
    }
 
    $Endpoint = "dns_rr_add"
-   $Parameters = "rr_id=$($DNSRRRecordID)&value1=$($DNSRRRecordValue)&add_flag=edit_only"
+
+   If($Value -ne ""){ $SplatVars += @{value1 = $Value} }
+   If($Ttl -ne ""){ $SplatVars += @{ttl = $Ttl} }
+   $queryString = ($SplatVars.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join '&'
+   
+   $Parameters = "rr_id=$($ID)&add_flag=edit_only&$($queryString)"
 
    $Response = Send-EfficientIPRequest -Parameters $Parameters -Endpoint $Endpoint -Method PUT
    Return $Response.Content | ConvertFrom-JSON
@@ -190,12 +203,12 @@ Function Update-EIPDNSRecord {
 
 Function Remove-EIPDNSRecord {
    Param(
-      [Parameter(Mandatory=$false, HelpMessage="DNS RR Record ID")][String]$DNSRRRecordID,
-      [Parameter(Mandatory=$false, HelpMessage="DNS RR Record Name")][String]$DNSRRRecordName
+      [Parameter(Mandatory=$false, HelpMessage="DNS RR Record ID")][String]$ID,
+      [Parameter(Mandatory=$false, HelpMessage="DNS RR Record Name")][String]$Name
    )
 
-   If($DNSRRRecordID -eq '') {
-      $DNSRRRecord = Get-EIPDNSRecordID -DNSRRRecordName $DNSRRRecordName
+   If($ID -eq '') {
+      $DNSRRRecord = Get-EIPDNSRecordID -Name $Name
       If($DNSRRRecord.count -eq 0){
          Write-Host "No records exist, exiting..."
          Break
@@ -203,11 +216,11 @@ Function Remove-EIPDNSRecord {
          Write-Host "More than one record returned, exiting..."
          Break
       }
-      $DNSRRRecordID = $DNSRRRecord
+      $ID = $DNSRRRecord
    }
 
    $Endpoint = "dns_rr_delete"
-   $Parameters = "rr_id=$($DNSRRRecordID)"
+   $Parameters = "rr_id=$($ID)"
 
    $Response = Send-EfficientIPRequest -Parameters $Parameters -Endpoint $Endpoint -Method DELETE
    Return $Response.Content | ConvertFrom-JSON
