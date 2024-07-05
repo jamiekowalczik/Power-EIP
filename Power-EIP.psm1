@@ -192,7 +192,7 @@ Function Update-EIPDNSRecord {
    $Endpoint = "dns_rr_add"
 
    If($Value -ne ""){ $SplatVars += @{value1 = $Value} }
-   If($Ttl -ne ""){ $SplatVars += @{ttl = $Ttl} }
+   If($Ttl -ne ""){ $SplatVars += @{rr_ttl = $Ttl} }
    $queryString = ($SplatVars.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join '&'
    
    $Parameters = "rr_id=$($ID)&add_flag=edit_only&$($queryString)"
